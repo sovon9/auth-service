@@ -2,24 +2,25 @@ package com.sovon9.authentication_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 
 @Configuration
-@EnableWebSecurity
 public class SecurityConfig {
 	
 	@Bean
 	public SecurityFilterChain authorizationServerChain(HttpSecurity http) throws Exception
 	{
-		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		OAuth2AuthorizationServerConfigurer serverConfigurer = new OAuth2AuthorizationServerConfigurer();
+		http
+		.securityMatcher(serverConfigurer.getEndpointsMatcher())
+		.authorizeHttpRequests(a->a.anyRequest().authenticated())
+		.csrf(csrf->csrf.disable())
+		.apply(serverConfigurer);
+		
 		return http.build();
 	}
 	
@@ -34,13 +35,5 @@ public class SecurityConfig {
 		return http.build();
 	}
 	
-//	@Bean
-//	public AuthenticationProvider authprovider()
-//	{
-//		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-//		provider.setUserDetailsService(null);
-//		provider.setPasswordEncoder(null);
-//		return provider;
-//	}
 	
 }
