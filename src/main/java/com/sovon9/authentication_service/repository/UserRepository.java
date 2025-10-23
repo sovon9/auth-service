@@ -1,4 +1,4 @@
-package com.sovon9.authentication_service;
+package com.sovon9.authentication_service.repository;
 
 import org.springframework.stereotype.Repository;
 

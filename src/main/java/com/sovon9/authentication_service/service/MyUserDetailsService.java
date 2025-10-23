@@ -7,7 +7,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import com.sovon9.authentication_service.UserRepository;
 import com.sovon9.authentication_service.entities.User;
 
 public class MyUserDetailsService/* implements UserDetailsService*/ {
