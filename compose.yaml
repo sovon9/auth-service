@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  auth-service:
+    image: "sovon9/auth-service"
+    ports:
+      - 9000:9000
+    environment:
+      - clientId=demo-client
+      - clientSecret=demo-secret
+    networks:
+      - service-network
+
+networks:
+  service-network:
+    driver: bridge

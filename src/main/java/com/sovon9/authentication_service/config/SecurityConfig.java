@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -30,6 +31,7 @@ import org.springframework.security.oauth2.server.authorization.client.InMemoryR
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
@@ -45,21 +47,26 @@ import com.nimbusds.jose.proc.SecurityContext;
 public class SecurityConfig {
 	
 	@Bean
+	@Order(1)
 	public SecurityFilterChain authorizationServerChain(HttpSecurity http) throws Exception
 	{
-//		OAuth2AuthorizationServerConfigurer serverConfigurer = new OAuth2AuthorizationServerConfigurer();
-//		http
-//		.securityMatcher(serverConfigurer.getEndpointsMatcher())
-//		.authorizeHttpRequests(a->a.anyRequest().authenticated())
-//		.csrf(csrf->csrf.disable())
-//		.apply(serverConfigurer);
-		
-		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		// create the config for Oauth server
+		OAuth2AuthorizationServerConfigurer serverConfigurer = new OAuth2AuthorizationServerConfigurer();
+		http
+		// use this filter to only match for securityendpoints like /token, /authorize
+		.securityMatcher(serverConfigurer.getEndpointsMatcher())
+				//apply configuration for oauth2 server
+				.with(serverConfigurer, authorizationServer -> {})
+				// secure other points
+				.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated());
+		//deprecated
+//		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 		
 		return http.build();
 	}
 	
 	@Bean
+	@Order(2)
 	public SecurityFilterChain filter(HttpSecurity http) throws Exception
 	{
 		http.authorizeHttpRequests(request->
@@ -128,7 +135,8 @@ public class SecurityConfig {
 	{
 		return new InMemoryOAuth2AuthorizationConsentService();
 	}
-	
+
+	// Json Web key
 	@Bean
 	JWKSource<SecurityContext> jwkSource() throws Exception
 	{
