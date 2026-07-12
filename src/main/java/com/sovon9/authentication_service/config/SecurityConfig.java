@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -41,6 +42,8 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 
 @Configuration
@@ -52,16 +55,24 @@ public class SecurityConfig {
 	{
 		// create the config for Oauth server
 		OAuth2AuthorizationServerConfigurer serverConfigurer = new OAuth2AuthorizationServerConfigurer();
+		// 1. Enable OpenID Connect (OIDC) - standard for modern apps
+		serverConfigurer.oidc(Customizer.withDefaults());
+
 		http
-		// use this filter to only match for securityendpoints like /token, /authorize
-		.securityMatcher(serverConfigurer.getEndpointsMatcher())
-				//apply configuration for oauth2 server
+				// 2. Only intercept OAuth2 protocol endpoints
+				.securityMatcher(serverConfigurer.getEndpointsMatcher())
+
+				// 3. Apply the OAuth2 configuration
 				.with(serverConfigurer, authorizationServer -> {})
-				// secure other points
-				.authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated());
-		//deprecated
-//		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-		
+
+				// 4. PRODUCTION ESSENTIAL: Tell Spring where to send users who aren't logged in yet
+				.exceptionHandling(exceptions -> exceptions
+						.defaultAuthenticationEntryPointFor(
+								new LoginUrlAuthenticationEntryPoint("/login"), // Redirects to your login page
+								new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+						)
+				);
+
 		return http.build();
 	}
 	
@@ -97,7 +108,8 @@ public class SecurityConfig {
 		RegisteredClient clientCreds = RegisteredClient.withId(UUID.randomUUID().toString())
 				.clientId("demo-client")
 				.clientSecret(encoder.encode("demo-secret"))
-				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+				// use CLIENT_SECRET_BASIC if you want to pass it as Basic auth in authorization
+				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
 				.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
 				.scope("demo.read")
 				.tokenSettings(TokenSettings.builder()
@@ -111,10 +123,11 @@ public class SecurityConfig {
 				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-				.redirectUri("http://127.0.0.1:9000/login/oauth2/code/demo-app")
-				.scope(OidcScopes.OPENID)
+//				.redirectUri("http://127.0.0.1:9000/login/oauth2/code/demo-app")
+				.redirectUri("http://127.0.0.1:9000/uaa/login/authorized")
+//				.scope(OidcScopes.OPENID)
 				.scope("demo-read")
-				.clientSettings(ClientSettings.builder().requireProofKey(true).build())
+				//.clientSettings(ClientSettings.builder().requireProofKey(true).build())
 				.tokenSettings(TokenSettings.builder()
 						.accessTokenTimeToLive(Duration.ofMinutes(10))
 						.refreshTokenTimeToLive(Duration.ofHours(4))
