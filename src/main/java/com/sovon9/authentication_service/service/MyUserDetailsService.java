@@ -1,7 +1,7 @@
 package com.sovon9.authentication_service.service;
 
-import java.util.List;
-
+import com.sovon9.authentication_service.entities.User;
+import com.sovon9.authentication_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,8 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.sovon9.authentication_service.entities.User;
-import com.sovon9.authentication_service.repository.UserRepository;
+import java.util.List;
 
 @Service
 public class MyUserDetailsService implements UserDetailsService {

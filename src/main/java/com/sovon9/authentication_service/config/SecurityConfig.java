@@ -12,6 +12,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -28,6 +30,8 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -37,7 +41,9 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Configuration
@@ -113,6 +119,30 @@ public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity h
 
 	// UserDetailsService is provided by MyUserDetailsService (@Service)
 	// Spring auto-detects and wires it — no bean definition needed here.
+
+	/**
+	 * Adds roles claim to jwt token
+	 * @return
+	 */
+	@Bean
+	public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer() {
+		return context -> {
+			// 1. Only customize the Access Token (ignore refresh tokens or ID tokens for now)
+			if (OAuth2TokenType.ACCESS_TOKEN.equals(context.getTokenType())) {
+
+				// 2. Grab the human user's authentication object
+				Authentication principal = context.getPrincipal();
+
+				// 3. Extract all authorities (e.g., ROLE_OPERATOR, ROLE_USER)
+				Set<String> authorities = principal.getAuthorities().stream()
+						.map(GrantedAuthority::getAuthority)
+						.collect(Collectors.toSet());
+
+				// 4. Inject them into the JWT payload under a custom claim named "roles"
+				context.getClaims().claim("roles", authorities);
+			}
+		};
+	}
 
 	@Bean
 	PasswordEncoder passwordEncoder()
