@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -93,8 +94,12 @@ public class DefaultClientSeeder implements ApplicationRunner {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://127.0.0.1:9000/login/authorized")
-                .scope("demo.read")
+//                .redirectUri("http://127.0.0.1:9000/login/authorized")
+                .redirectUri("http://127.0.0.1:8081/login/oauth2/code/demo-app")
+                .scopes(scp -> {
+                    scp.add("demo.read");
+                    scp.add("openid");
+                })
                 .clientSettings(ClientSettings.builder()
                         .requireProofKey(false)             // set true to enforce PKCE in prod
                         .requireAuthorizationConsent(false) // set true to show a consent screen
