@@ -95,13 +95,13 @@ public class DefaultClientSeeder implements ApplicationRunner {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
 //                .redirectUri("http://127.0.0.1:9000/login/authorized")
-                .redirectUri("http://127.0.0.1:8081/login/oauth2/code/demo-app")
+                .redirectUri("http://localhost:8081/login/oauth2/code/demo-app")
                 .scopes(scp -> {
                     scp.add("demo.read");
                     scp.add("openid");
                 })
                 .clientSettings(ClientSettings.builder()
-                        .requireProofKey(false)             // set true to enforce PKCE in prod
+                        .requireProofKey(true)             // set true to enforce PKCE in prod
                         .requireAuthorizationConsent(false) // set true to show a consent screen
                         .build())
                 .tokenSettings(TokenSettings.builder()
